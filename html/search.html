@@ -28,7 +28,24 @@
 
 
 <div class=bodyBloc>
-  <p>Search form</p>
+  <form action="/search.html" method="post">
+      <div style="padding-top:40px; padding-bottom:5px;">
+          <label>Video Name: </label>
+          <input type="text" name="videoName"/>
+      </div>
+      <div style="padding-bottom:5px;">
+        <label>Select Video Genre: </label>
+        <select name="genre">
+          <option value="rock">Rock</option>
+          <option value="hardrock">HardRock</option>
+          <option value="metal">Metal</option>
+          <option value="dubsteb">Dubstep</option>
+        </select>
+      </div>
+      <div style="padding-bottom:5px;">
+          <input type="submit" value="search"/>
+      </div>
+  </form>
 </div>
 
 
