@@ -30,7 +30,7 @@ var express = require('express'),
   /*// create a new user
   var newUser = new utilisateur({
     name: 'Robin',
-    username: 'robin2',
+    username: 'robin5',
     password: 'gielen',
   });
 
@@ -40,10 +40,11 @@ var express = require('express'),
   });*/
 
   // get the user robin
-  utilisateur.find({ username: 'robin' }, function(err, user) {
+  utilisateur.find({ username: 'robin3' }, function(err, user) {
     if (err) throw err;
     // object of the user
     console.log(user);
+    console.log('user printed');
   });
 
   //===============PASSPORT===============
@@ -71,6 +72,7 @@ var express = require('express'),
   app.use(cookieParser());
   app.use(bodyParser.urlencoded({ extended: false }));
   app.use(bodyParser.json());
+  app.use(express.bodyParser());
   app.use(methodOverride('X-HTTP-Method-Override'));
   app.use(session({secret: 'supernova', saveUninitialized: true, resave: true}));
   app.use(passport.initialize());
@@ -103,21 +105,22 @@ var express = require('express'),
   });
 
   app.post('/subscribe.html', function (req, res, next) {
-    console.log('username' + req.username);
-    console.log('password' + req.password);
-    console.log('firstName' + req.firstname);
-    console.log('lastName' + req.lastname);
-    console.log('artistName' + req.artistname);
-    console.log('description' + req.description);
+    console.log(req.body.username);
+    console.log(req.body.password);
+    console.log(req.body.firstname);
+    console.log(req.body.lastname);
+    console.log(req.body.artistname);
+    console.log(req.body.description);
     var newUser = utilisateur({
-      name: req.username,
-      username: 'req.username',
-      password: 'req.password',
-      firstName: 'req.firstname',
-      lastName: 'req.lastname',
-      artistName: 'req.artistname',
-      description: 'req.description',
+      name: req.body.username,
+      username: req.body.username,
+      password: req.body.password,
+      firstName: req.body.firstname,
+      lastName: req.body.lastname,
+      artistName: req.body.artistname,
+      description: req.body.description,
     });
+    
       // save the user
     newUser.save(function(err) {
       if (err) throw err;
