@@ -8,3 +8,5 @@ db/WiredTiger
 *.0000000001
 db/journal/WiredTigerPreplog.0000000002
 npm-debug.log
+*.lock
+db/WiredTiger.turtle
