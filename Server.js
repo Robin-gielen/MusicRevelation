@@ -9,30 +9,41 @@ var express = require('express'),
   session = require('express-session'),
   passport = require('passport'),
   LocalStrategy = require('passport-local'),
-  // var config = require('./config.js'), //config file contains all tokens and other private info
-  //    funct = require('./functions.js'); //funct file contains our helper functions for our Passport and database work
 
   //==========MONGOOSE==========
   mongoose = require('mongoose'),
   MongoClient = require('mongodb'),
   // grab the user model
-  User = require('./models/users'),
+  utilisateur = require('./models/users'),
   url = 'mongodb://localhost:27017/db',
   app = express();
 
-  // create a new user
-  var newUser = User({
+  //var connection = mongoose.createConnection('mongodb://localhost:27017/db');
+
+  mongoose.connect('mongodb://localhost/db');
+  var db = mongoose.connection;
+  db.on('error', console.error.bind(console, 'connection error:'));
+  db.once('open', function() {
+    console.log('CONNECTED');
+  });
+
+  /*// create a new user
+  var newUser = new utilisateur({
     name: 'Robin',
-    username: 'robin',
+    username: 'robin2',
     password: 'gielen',
   });
 
-  // save the user
-  MongoClient.connect(url, function(err, db) {
-    newUser.save(function(err) {
-      if (err) throw err;
-      console.log('User created!');
-    });
+  newUser.save(function(err) {
+    if (err) throw err;
+    console.log('User created!');
+  });*/
+
+  // get the user robin
+  utilisateur.find({ username: 'robin' }, function(err, user) {
+    if (err) throw err;
+    // object of the user
+    console.log(user);
   });
 
   //===============PASSPORT===============
@@ -41,17 +52,17 @@ var express = require('express'),
     {passReqToCallback : true}, //allows us to pass back the request to the callback
     function(req, username, password, done) {
         if (password == 'gielen') {
-          console.log('credential ok');
+          console.log('You are successfully logged in ' + username + '!');
           req.session.success = 'You are successfully logged in ' + username + '!';
           //req.session.username = username;
           done(null, username);
         }
         else {
           req.session.error = 'Could not log user in. Please try again.'; //inform user could not log them in
-          console.log('credential not ok');
+          console.log('Could not log user in. Please try again.');
           done(null, false, username);
         }
-    }));
+  }));
 
   //===============EXPRESS================
   // Configure Express
@@ -83,121 +94,123 @@ var express = require('express'),
     next();
   });
 
+  app.get('/home.html', function (req, res,  next) {
+  	res.sendFile('html/home.html', {root: __dirname })
+  });
 
+  app.get('/subscribe.html', function (req, res,  next) {
+  	res.sendFile('html/subscribe.html', {root: __dirname })
+  });
 
-app.get('/home.html', function (req, res,  next) {
-	res.sendFile('html/home.html', {root: __dirname })
-});
-
-app.get('/subscribe.html', function (req, res,  next) {
-	res.sendFile('html/subscribe.html', {root: __dirname })
-});
-
-app.post('/subscribe.html', function (req, res, next) {
-  MongoClient.connect(url, function(err, db) {
-      var newUser = User({
-        name: req.username,
-        username: req.username,
-        password: req.password,
-        firstName: req.firstname,
-        lastName: req.lastname,
-        artistName: req.artistname,
-        description: req.description,
+  app.post('/subscribe.html', function (req, res, next) {
+    console.log('username' + req.username);
+    console.log('password' + req.password);
+    console.log('firstName' + req.firstname);
+    console.log('lastName' + req.lastname);
+    console.log('artistName' + req.artistname);
+    console.log('description' + req.description);
+    var newUser = utilisateur({
+      name: req.username,
+      username: 'req.username',
+      password: 'req.password',
+      firstName: 'req.firstname',
+      lastName: 'req.lastname',
+      artistName: 'req.artistname',
+      description: 'req.description',
     });
       // save the user
     newUser.save(function(err) {
       if (err) throw err;
       console.log('User created!');
     });
-  })
-});
+    res.sendFile('html/home.html', {root: __dirname })
+  });
 
-app.get('/login.html', function (req, res,  next) {
-  console.log('inlogin');
-	res.sendFile('html/login.html', {root: __dirname })
-});
+  app.get('/login.html', function (req, res,  next) {
+    console.log('inlogin');
+  	res.sendFile('html/login.html', {root: __dirname })
+  });
 
-//sends the request through our local signup strategy, and if successful takes user to homepage, otherwise returns then to signin page
-app.post('/login.html', function (req, res, next) {
-  console.log('in post login');
-  passport.authenticate('local-signin', {
-    successRedirect: '/profile.html',
-    failureRedirect: '/subscribe.html'
-  }) (req, res, next); // appelle de la fonction retournée par passport.authenticate('local-signin' (req, res, next))
-});
+  //sends the request through our local signup strategy, and if successful takes user to homepage, otherwise returns then to signin page
+  app.post('/login.html', function (req, res, next) {
+    console.log('in post login');
+    passport.authenticate('local-signin', {
+      successRedirect: '/profile.html',
+      failureRedirect: '/subscribe.html'
+    }) (req, res, next); // appelle de la fonction retournée par passport.authenticate('local-signin' (req, res, next))
+  });
 
-app.use(function loggedIn(req, res, next) {
-    if (req.user) {
-        next();
-    } else {
-        res.redirect('/login');
-    }
-});
+  app.use(function loggedIn(req, res, next) {
+      if (req.user) {
+          next();
+      } else {
+          res.redirect('/login');
+      }
+  });
 
-app.get('/profile.html', function (req, res,  next) {
-	res.sendFile('html/profile.html', {root: __dirname })
-});
+  app.get('/profile.html', function (req, res,  next) {
+  	res.sendFile('html/profile.html', {root: __dirname })
+  });
 
-app.get('/editVideo.html', function (req, res,  next) {
-	res.sendFile('html/editVideo.html', {root: __dirname })
-});
+  app.get('/editVideo.html', function (req, res,  next) {
+  	res.sendFile('html/editVideo.html', {root: __dirname })
+  });
 
-app.get('/favouriteArtists.html', function (req, res,  next) {
-	res.sendFile('html/favouriteArtists.html', {root: __dirname })
-});
+  app.get('/favouriteArtists.html', function (req, res,  next) {
+  	res.sendFile('html/favouriteArtists.html', {root: __dirname })
+  });
 
-app.get('/modifyProfile.html', function (req, res,  next) {
-	res.sendFile('html/modifyProfile.html', {root: __dirname })
-});
+  app.get('/modifyProfile.html', function (req, res,  next) {
+  	res.sendFile('html/modifyProfile.html', {root: __dirname })
+  });
 
-app.get('/myVideo.html', function (req, res,  next) {
-	res.sendFile('html/myVideo.html', {root: __dirname })
-});
+  app.get('/myVideo.html', function (req, res,  next) {
+  	res.sendFile('html/myVideo.html', {root: __dirname })
+  });
 
-app.get('/search.html', function (req, res,  next) {
-	res.sendFile('html/search.html', {root: __dirname })
-});
+  app.get('/search.html', function (req, res,  next) {
+  	res.sendFile('html/search.html', {root: __dirname })
+  });
 
-app.get('/uploadVideos.html', function (req, res,  next) {
-	res.sendFile('html/uploadVideos.html', {root: __dirname })
-});
+  app.get('/uploadVideos.html', function (req, res,  next) {
+  	res.sendFile('html/uploadVideos.html', {root: __dirname })
+  });
 
-app.get('/video.html', function (req, res,  next) {
-	res.sendFile('html/video.html', {root: __dirname })
-});
+  app.get('/video.html', function (req, res,  next) {
+  	res.sendFile('html/video.html', {root: __dirname })
+  });
 
-app.get('/videoResearch.html', function (req, res,  next) {
-	res.sendFile('html/videoResearch.html', {root: __dirname })
-});
+  app.get('/videoResearch.html', function (req, res,  next) {
+  	res.sendFile('html/videoResearch.html', {root: __dirname })
+  });
 
-app.get('/visitProfile.html', function (req, res,  next) {
-	res.sendFile('html/visitProfile.html', {root: __dirname })
-});
+  app.get('/visitProfile.html', function (req, res,  next) {
+  	res.sendFile('html/visitProfile.html', {root: __dirname })
+  });
 
-app.get('/visitProfileVideos.html', function (req, res,  next) {
-	res.sendFile('html/visitProfileVideos.html', {root: __dirname })
-});
+  app.get('/visitProfileVideos.html', function (req, res,  next) {
+  	res.sendFile('html/visitProfileVideos.html', {root: __dirname })
+  });
 
-app.get('/', function (req, res,  next) {
-	console.log('coucou4');
-});
+  app.get('/', function (req, res,  next) {
+  	console.log('coucou4');
+  });
 
-passport.serializeUser(function(user, done) {
-  done(null, user);
-});
+  passport.serializeUser(function(user, done) {
+    done(null, user);
+  });
 
-passport.deserializeUser(function(user, done) {
-  done(null, user);
-});
+  passport.deserializeUser(function(user, done) {
+    done(null, user);
+  });
 
-/*function loggedIn(req, res, next) {
-    if (req.user) {
-        next();
-    } else {
-        res.redirect('/login');
-    }
-}*/
-
+  /*function loggedIn(req, res, next) {
+      if (req.user) {
+          next();
+      } else {
+          res.redirect('/login');
+      }
+  }*/
 app.listen(3000, function () {
   console.log('Example app listening on port 3000!');
 });
