@@ -12,12 +12,37 @@ var express = require('express'),
   // var config = require('./config.js'), //config file contains all tokens and other private info
   //    funct = require('./functions.js'); //funct file contains our helper functions for our Passport and database work
 
+  //==========MONGOOSE==========
+  mongoose = require('mongoose'),
+
   app = express();
 
+  //mongoose.connect('mongodb://user:pass@localhost:port/database', { config: { autoIndex: false } });
+
+  //=======TEST MONGOOSE=========
+var userLogs = require('db.js');
+var peter = new userLogs();
 
   //===============PASSPORT===============
 
-  //This section will contain our work with Passport
+  passport.use('local-signin', new LocalStrategy(
+    {passReqToCallback : true}, //allows us to pass back the request to the callback
+    function(req, username, password, done) {
+        console.log('in sing fonction');
+        if (username == 'robin' && password == 'gielen') {
+          console.log('credential ok');
+          console.log(peter.nom);
+
+          //req.session.success = 'You are successfully logged in ' + username + '!';
+          //req.session.username = 'Robin';
+          done(null, user);
+        }
+        else {
+          //req.session.error = 'Could not log user in. Please try again.'; //inform user could not log them in
+          console.log('credential not ok');
+          done(null, username);
+        }
+    }));
 
   //===============EXPRESS================
   // Configure Express
@@ -65,21 +90,6 @@ app.get('/login.html', function (req, res,  next) {
 	res.sendFile('html/login.html', {root: __dirname })
 });
 
-passport.use('local-signin', new LocalStrategy(
-  {passReqToCallback : true}, //allows us to pass back the request to the callback
-  function(req, username, password, done) {
-      console.log('in sing fonction');
-      if (username == 'robin' && password == 'gielen') {
-        req.session.success = 'You are successfully logged in ' + username + '!';
-        req.session.username = 'Robin';
-        done(null, username);
-      }
-      else {
-        req.session.error = 'Could not log user in. Please try again.'; //inform user could not log them in
-        done(null, username);
-      }
-  }));
-
 //sends the request through our local signup strategy, and if successful takes user to homepage, otherwise returns then to signin page
 app.post('/login.html', function (req, res, next) {
   console.log('in post login');
@@ -101,8 +111,8 @@ app.post('/login.html', function (req, res, next) {
 });*/
 
 app.get('/profile.html', function (req, res,  next) {
-  console.log(req.session.succes);
-  console.log(req.session.username);
+  //console.log(req.session.succes);
+  //console.log(req.session.username);
 	res.sendFile('html/profile.html', {root: __dirname })
 });
 
@@ -149,12 +159,6 @@ app.get('/visitProfileVideos.html', function (req, res,  next) {
 app.get('/', function (req, res,  next) {
 	console.log('coucou4');
 });
-
-
-
-function isLoggedIn (req, res, next) {
-  return (req.sessions.loggedIn);
-}
 
 app.listen(3000, function () {
   console.log('Example app listening on port 3000!');
