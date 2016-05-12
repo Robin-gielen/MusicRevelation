@@ -17,7 +17,23 @@
 
 
 <div class=unsplit_bodyBloc>
-  <p>upload your video here</p>
+  <form action="/uploadVideos.html" method="post">
+      <div style="padding-top:40px; padding-bottom:5px;">
+          <label>Video Youtube Link:</label>
+          <input type="text" name="videoYoutubeLink"/>
+      </div>
+      <div style="padding-bottom:5px;">
+        <select name="cars">
+          <option value="rock">Rock</option>
+          <option value="hardrock">HardRock</option>
+          <option value="metal">Metal</option>
+          <option value="dubsteb">Dubstep</option>
+        </select>
+      </div>
+      <div style="padding-bottom:5px;">
+          <input type="submit" value="Log In"/>
+      </div>
+  </form>
 </div>
 
 
