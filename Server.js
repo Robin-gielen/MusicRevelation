@@ -14,33 +14,42 @@ var express = require('express'),
 
   //==========MONGOOSE==========
   mongoose = require('mongoose'),
-
+  MongoClient = require('mongodb'),
+  // grab the user model
+  User = require('./models/users'),
+  url = 'mongodb://localhost:27017/db',
   app = express();
 
-  //mongoose.connect('mongodb://user:pass@localhost:port/database', { config: { autoIndex: false } });
+  // create a new user
+  var newUser = User({
+    name: 'Robin',
+    username: 'robin',
+    password: 'gielen',
+  });
 
-  //=======TEST MONGOOSE=========
-var userLogs = require('db.js');
-var peter = new userLogs();
+  // save the user
+  MongoClient.connect(url, function(err, db) {
+    newUser.save(function(err) {
+      if (err) throw err;
+      console.log('User created!');
+    });
+  });
 
   //===============PASSPORT===============
 
   passport.use('local-signin', new LocalStrategy(
     {passReqToCallback : true}, //allows us to pass back the request to the callback
     function(req, username, password, done) {
-        console.log('in sing fonction');
-        if (username == 'robin' && password == 'gielen') {
+        if (password == 'gielen') {
           console.log('credential ok');
-          console.log(peter.nom);
-
-          //req.session.success = 'You are successfully logged in ' + username + '!';
-          //req.session.username = 'Robin';
-          done(null, user);
+          req.session.success = 'You are successfully logged in ' + username + '!';
+          //req.session.username = username;
+          done(null, username);
         }
         else {
-          //req.session.error = 'Could not log user in. Please try again.'; //inform user could not log them in
+          req.session.error = 'Could not log user in. Please try again.'; //inform user could not log them in
           console.log('credential not ok');
-          done(null, username);
+          done(null, false, username);
         }
     }));
 
@@ -55,6 +64,7 @@ var peter = new userLogs();
   app.use(session({secret: 'supernova', saveUninitialized: true, resave: true}));
   app.use(passport.initialize());
   app.use(passport.session());
+  // Initialize Passport!!! (This only wasted 2h of my time)
 
   // Session-persisted message middleware
   app.use(function(req, res, next){
@@ -83,7 +93,24 @@ app.get('/subscribe.html', function (req, res,  next) {
 	res.sendFile('html/subscribe.html', {root: __dirname })
 });
 
-// sub app.post ...
+app.post('/subscribe.html', function (req, res, next) {
+  MongoClient.connect(url, function(err, db) {
+      var newUser = User({
+        name: req.username,
+        username: req.username,
+        password: req.password,
+        firstName: req.firstname,
+        lastName: req.lastname,
+        artistName: req.artistname,
+        description: req.description,
+    });
+      // save the user
+    newUser.save(function(err) {
+      if (err) throw err;
+      console.log('User created!');
+    });
+  })
+});
 
 app.get('/login.html', function (req, res,  next) {
   console.log('inlogin');
@@ -99,20 +126,15 @@ app.post('/login.html', function (req, res, next) {
   }) (req, res, next); // appelle de la fonction retournée par passport.authenticate('local-signin' (req, res, next))
 });
 
-/*app.use(function (req, res, next) {
-  if (req.session.loggedIn) {
-    console.log('logged');
-    next(req, res);
-  }
-  else {
-    res.redirect('/home.html')
-    console.log('notLogged');
-  }
-});*/
+app.use(function loggedIn(req, res, next) {
+    if (req.user) {
+        next();
+    } else {
+        res.redirect('/login');
+    }
+});
 
 app.get('/profile.html', function (req, res,  next) {
-  //console.log(req.session.succes);
-  //console.log(req.session.username);
 	res.sendFile('html/profile.html', {root: __dirname })
 });
 
@@ -159,6 +181,22 @@ app.get('/visitProfileVideos.html', function (req, res,  next) {
 app.get('/', function (req, res,  next) {
 	console.log('coucou4');
 });
+
+passport.serializeUser(function(user, done) {
+  done(null, user);
+});
+
+passport.deserializeUser(function(user, done) {
+  done(null, user);
+});
+
+/*function loggedIn(req, res, next) {
+    if (req.user) {
+        next();
+    } else {
+        res.redirect('/login');
+    }
+}*/
 
 app.listen(3000, function () {
   console.log('Example app listening on port 3000!');

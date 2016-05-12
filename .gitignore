@@ -1,0 +1,10 @@
+*.wt
+db/diagnostic.data/metrics.2016-05-12T10-30-37Z-00000
+*.interim
+*.2016-05-12T11-12-00Z-00000
+db/journal/WiredTigerLog.0000000002
+*.bson
+db/WiredTiger
+*.0000000001
+db/journal/WiredTigerPreplog.0000000002
+npm-debug.log
