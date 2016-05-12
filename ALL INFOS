@@ -1,0 +1,3 @@
+So if you put your myJS.js in public/js/myJS.js you can then reference it like so
+
+<script src="/js/myJS.js"></script>
