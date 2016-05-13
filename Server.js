@@ -15,6 +15,7 @@ var express = require('express'),
   MongoClient = require('mongodb'),
   // grab the user model
   utilisateur = require('./models/users'),
+  video = require('./models/videos'),
   url = 'mongodb://localhost:27017/db',
   app = express();
 
@@ -26,11 +27,11 @@ var express = require('express'),
   db.once('open', function() {
     console.log('CONNECTED');
   });
-
+  var tempName;
   /*// create a new user
   var newUser = new utilisateur({
     name: 'Robin',
-    username: 'robin5',
+    username: 'robin2',
     password: 'gielen',
   });
 
@@ -40,43 +41,54 @@ var express = require('express'),
   });*/
 
   // get the user robin
-  utilisateur.find({ username: 'robin3' }, function(err, user) {
+  utilisateur.find({ username: 'robin' }, function(err, user) {
     if (err) throw err;
     // object of the user
     console.log(user);
-    console.log('user printed');
-  });
+    });
 
   //===============PASSPORT===============
 
   passport.use('local-signin', new LocalStrategy(
     {passReqToCallback : true}, //allows us to pass back the request to the callback
     function(req, username, password, done) {
-        if (password == 'gielen') {
-          console.log('You are successfully logged in ' + username + '!');
-          req.session.success = 'You are successfully logged in ' + username + '!';
-          //req.session.username = username;
-          done(null, username);
+    var tempPass;
+      utilisateur.find({ username: username }, function(err, user) {
+        if (err) throw err;
+        console.log('from db' + user);
+        if (user[0] != undefined) {
+          tempPass = user[0].toObject().password;
+          console.log(user[0].toObject().password);
+          if (password == tempPass) {
+            console.log('You are successfully logged in ' + username + '!');
+            req.session.success = 'You are successfully logged in ' + username + '!';
+            done(null, username);
+          }
+          else {
+            req.session.error = 'Could not log user in. Please try again.'; //inform user could not log them in
+            console.log('Could not log user in. Please try again.');
+            done(null, false, username);
+          }
         }
         else {
-          req.session.error = 'Could not log user in. Please try again.'; //inform user could not log them in
-          console.log('Could not log user in. Please try again.');
           done(null, false, username);
         }
+      });
   }));
 
-  //===============EXPRESS================
-  // Configure Express
+
+  // Configure
   app.use(logger('combined'));
   app.use(express.static('static'));
   app.use(cookieParser());
   app.use(bodyParser.urlencoded({ extended: false }));
   app.use(bodyParser.json());
-  app.use(express.bodyParser());
+  app.use(bodyParser());
   app.use(methodOverride('X-HTTP-Method-Override'));
   app.use(session({secret: 'supernova', saveUninitialized: true, resave: true}));
   app.use(passport.initialize());
   app.use(passport.session());
+
   // Initialize Passport!!! (This only wasted 2h of my time)
 
   // Session-persisted message middleware
@@ -105,12 +117,12 @@ var express = require('express'),
   });
 
   app.post('/subscribe.html', function (req, res, next) {
-    console.log(req.body.username);
+    /*console.log(req.body.username);
     console.log(req.body.password);
     console.log(req.body.firstname);
     console.log(req.body.lastname);
     console.log(req.body.artistname);
-    console.log(req.body.description);
+    console.log(req.body.description);*/
     var newUser = utilisateur({
       name: req.body.username,
       username: req.body.username,
@@ -120,13 +132,14 @@ var express = require('express'),
       artistName: req.body.artistname,
       description: req.body.description,
     });
-    
-      // save the user
+
+    // save the user into the db
     newUser.save(function(err) {
       if (err) throw err;
       console.log('User created!');
     });
-    res.sendFile('html/home.html', {root: __dirname })
+
+    res.sendFile('html/login.html', {root: __dirname })
   });
 
   app.get('/login.html', function (req, res,  next) {
@@ -134,21 +147,26 @@ var express = require('express'),
   	res.sendFile('html/login.html', {root: __dirname })
   });
 
-  //sends the request through our local signup strategy, and if successful takes user to homepage, otherwise returns then to signin page
+  //sends the request through our local signup strategy, and if successful takes user to homepage, otherwise returns them to subscribe page
   app.post('/login.html', function (req, res, next) {
-    console.log('in post login');
     passport.authenticate('local-signin', {
-      successRedirect: '/profile.html',
+      successRedirect: '/homeLogged.html',
       failureRedirect: '/subscribe.html'
     }) (req, res, next); // appelle de la fonction retournée par passport.authenticate('local-signin' (req, res, next))
   });
 
   app.use(function loggedIn(req, res, next) {
       if (req.user) {
+        tempName = req.user;
+        console.log(tempName);
           next();
       } else {
-          res.redirect('/login');
+          res.redirect('/subscribe.html');
       }
+  });
+
+  app.get('/homeLogged.html', function (req, res,  next) {
+  	res.sendFile('html/homeLogged.html', {root: __dirname })
   });
 
   app.get('/profile.html', function (req, res,  next) {
@@ -167,8 +185,8 @@ var express = require('express'),
   	res.sendFile('html/modifyProfile.html', {root: __dirname })
   });
 
-  app.get('/myVideo.html', function (req, res,  next) {
-  	res.sendFile('html/myVideo.html', {root: __dirname })
+  app.get('/myVideos.html', function (req, res,  next) {
+  	res.sendFile('html/myVideos.html', {root: __dirname })
   });
 
   app.get('/search.html', function (req, res,  next) {
@@ -177,6 +195,24 @@ var express = require('express'),
 
   app.get('/uploadVideos.html', function (req, res,  next) {
   	res.sendFile('html/uploadVideos.html', {root: __dirname })
+  });
+
+  app.post('/uploadVideos.html', function(req, res, next) {
+    console.log(tempName);
+    console.log(req.body.videoYoutubeLink);
+    console.log(req.body.genre);
+    var newVideo = video({
+      url: req.body.videoYoutubeLink,
+      genre: req.body.genre,
+      artistName: tempName,
+    });
+
+    // save the video into the db
+    newVideo.save(function(err) {
+      if (err) throw err;
+      console.log('Video added');
+    });
+    res.redirect('myVideos.html');
   });
 
   app.get('/video.html', function (req, res,  next) {
@@ -207,13 +243,6 @@ var express = require('express'),
     done(null, user);
   });
 
-  /*function loggedIn(req, res, next) {
-      if (req.user) {
-          next();
-      } else {
-          res.redirect('/login');
-      }
-  }*/
 app.listen(3000, function () {
   console.log('Example app listening on port 3000!');
 });

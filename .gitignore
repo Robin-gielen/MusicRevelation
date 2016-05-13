@@ -11,3 +11,12 @@ npm-debug.log
 *.lock
 db/WiredTiger.turtle
 db/diagnostic.data/metrics.2016-05-12T13-44-41Z-00000
+*.2016-05-13T07-54-39Z-00000
+db/diagnostic.data/metrics.2016-05-13T08-26-09Z-00000
+*.2016-05-13T09-06-03Z-00000
+db/diagnostic.data/metrics.2016-05-13T10-31-36Z-00000
+*.2016-05-13T11-17-58Z-00000
+db/diagnostic.data/metrics.2016-05-13T11-08-55Z-00000
+db/diagnostic.data/metrics.2016-05-13T09-39-37Z-00000
+*.2016-05-13T11-23-14Z-00000
+db/journal/WiredTigerLog.0000000008

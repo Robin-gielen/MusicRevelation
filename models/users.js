@@ -1,6 +1,8 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
+
+
 // user schema
 var UserSchema = new Schema({
   name: String,
@@ -13,8 +15,7 @@ var UserSchema = new Schema({
   },
   password: {
     type: String,
-    required: true,
-    select: false   // do not select in query by default
+    required: true
   },
   firstName: {
     type: String
@@ -23,13 +24,13 @@ var UserSchema = new Schema({
     type: String
   },
   artistName: {
-    type: String
+    type: String,
+    required: true
   },
   description: {
     type: String
   }
 });
-
 
 
 module.exports = mongoose.model('User', UserSchema);
