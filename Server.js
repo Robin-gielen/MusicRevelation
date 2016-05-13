@@ -28,6 +28,7 @@ var express = require('express'),
     console.log('CONNECTED');
   });
   var tempName;
+  var tempUser = new utilisateur;
   /*// create a new user
   var newUser = new utilisateur({
     name: 'Robin',
@@ -58,7 +59,15 @@ var express = require('express'),
         console.log('from db' + user);
         if (user[0] != undefined) {
           tempPass = user[0].toObject().password;
-          console.log(user[0].toObject().password);
+          tempUser = new utilisateur({
+            name: user[0].toObject().name,
+            username: user[0].toObject().username,
+            password: user[0].toObject().password,
+            firstName: user[0].toObject().firstName,
+            lastName: user[0].toObject().lastName,
+            artistName: user[0].toObject().artistName,
+            description: user[0].toObject().description,
+          });
           if (password == tempPass) {
             console.log('You are successfully logged in ' + username + '!');
             req.session.success = 'You are successfully logged in ' + username + '!';
@@ -108,7 +117,7 @@ var express = require('express'),
     next();
   });
 
-  app.get('/home.html', function (req, res,  next) {
+  app.get('/homeUnlogged.html', function (req, res,  next) {
   	res.sendFile('html/home.html', {root: __dirname })
   });
 
@@ -147,10 +156,9 @@ var express = require('express'),
   	res.sendFile('html/login.html', {root: __dirname })
   });
 
-  //sends the request through our local signup strategy, and if successful takes user to homepage, otherwise returns them to subscribe page
   app.post('/login.html', function (req, res, next) {
     passport.authenticate('local-signin', {
-      successRedirect: '/homeLogged.html',
+      successRedirect: '/home.html',
       failureRedirect: '/subscribe.html'
     }) (req, res, next); // appelle de la fonction retournée par passport.authenticate('local-signin' (req, res, next))
   });
@@ -161,15 +169,22 @@ var express = require('express'),
         console.log(tempName);
           next();
       } else {
-          res.redirect('/subscribe.html');
+          res.redirect('/homeUnlogged.html');
       }
   });
 
-  app.get('/homeLogged.html', function (req, res,  next) {
-  	res.sendFile('html/homeLogged.html', {root: __dirname })
+  app.get('/logOut.html', function (req, res, next) {
+    req.logout();
+    res.redirect('/home.html');
+  });
+
+  app.get('/home.html', function (req, res,  next) {
+    res.sendFile('html/homeLogged.html', {root: __dirname })
   });
 
   app.get('/profile.html', function (req, res,  next) {
+    //res.render('profile', tempUser);
+    res.send(tempUser); //replace with your data here
   	res.sendFile('html/profile.html', {root: __dirname })
   });
 
@@ -186,6 +201,12 @@ var express = require('express'),
   });
 
   app.get('/myVideos.html', function (req, res,  next) {
+    video.find({ artistName: tempUser.artistName }, function(err, videoList) {
+      if (err) throw err;
+      // object of the user
+      console.log(videoList);
+      res.send(videoList);
+      });
   	res.sendFile('html/myVideos.html', {root: __dirname })
   });
 
@@ -198,7 +219,7 @@ var express = require('express'),
   });
 
   app.post('/uploadVideos.html', function(req, res, next) {
-    console.log(tempName);
+    console.log(tempUser.artistName);
     console.log(req.body.videoYoutubeLink);
     console.log(req.body.genre);
     var newVideo = video({
@@ -229,10 +250,6 @@ var express = require('express'),
 
   app.get('/visitProfileVideos.html', function (req, res,  next) {
   	res.sendFile('html/visitProfileVideos.html', {root: __dirname })
-  });
-
-  app.get('/', function (req, res,  next) {
-  	console.log('coucou4');
   });
 
   passport.serializeUser(function(user, done) {

@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>My Profile</title>
+<title>Subscribe</title>
 <link rel="stylesheet" href="style.css">
 
 </head>
+
 <body>
 
   <div class=title>
@@ -16,34 +17,56 @@
 <div class=topBloc>
   <a class=a1 href="home.html">Home</a>
   <a class=a2 href="search.html">Search</a>
+  <a class=a3 href="subscribe.html">Subscribe</a>
+  <a class=a4 href="login.html">Login</a>
 </div>
 
 
-<div class=leftBloc>
-  <form action="#">
-    <p>Quick Search:</p>
-    <input style="width:80%; margin-left:5px; margin-bottom:3px;" type="text" name="search">
-    <input style="margin-left:5px;" type="submit" value="search">
+
+
+<div class=unsplit_bodyBloc>
+  <p>Fill the form in to subscribe ! </p>
+  <p>Remember that you must be logged in in order to use most of the functions of this site. </p>
+  <form action="/subscribe.html" method="post">
+      <div style="padding-top:40px; padding-bottom:5px;">
+          <label>Username:</label>
+      </div>
+
+      <div style="padding-bottom:5px;">
+          <label>Password:</label>
+          var data = {};
+					data.title = "title";
+					data.message = "message";
+
+					$.ajax({
+						type: 'POST',
+						data: JSON.stringify(data),
+				        contentType: 'application/json',
+                        url: 'http://localhost:3000/endpoint',
+                        success: function(data) {
+                            console.log('success');
+                            console.log(JSON.stringify(data));
+      </div>
+
+      <div style="padding-bottom:5px;">
+          <label>First Name:</label>
+      </div>
+
+      <div style="padding-bottom:5px;">
+          <label>Last Name:</label>
+      </div>
+
+      <div style="padding-bottom:5px;">
+          <label>Artist Name:</label>
+      </div>
+
+      <div style="padding-bottom:5px;">
+          <label>Description:</label>
+      </div>
+
+      <div style="padding-bottom:5px;">
+      </div>
   </form>
-</div>
-
-
-
-<div class=bodyBloc>
-  <p>if not connected, profile open login screen, if connected, display profile data</p>
-</div>
-
-
-
-
-<div class=rightBloc style="padding-bottom:350px;">
-  <p style="margin-left:5px;">Recommandation chaines:</p>
-  <ul>
-    <li>chaine1</li>
-    <li>chaine2</li>
-    <li>chaine3</li>
-    <li>chaine4</li>
-  </ul>
 </div>
 
 
