@@ -10,6 +10,7 @@ var express = require('express'),
   passport = require('passport'),
   LocalStrategy = require('passport-local'),
 
+
   //==========MONGOOSE==========
   mongoose = require('mongoose'),
   MongoClient = require('mongodb'),
@@ -19,7 +20,8 @@ var express = require('express'),
   url = 'mongodb://localhost:27017/db',
   app = express();
 
-  //var connection = mongoose.createConnection('mongodb://localhost:27017/db');
+var fs = require('fs');
+var handleBar = require('express-handlebars'); //handleBar
 
   mongoose.connect('mongodb://localhost/db');
   var db = mongoose.connection;
@@ -28,7 +30,8 @@ var express = require('express'),
     console.log('CONNECTED');
   });
   var tempName;
-  var tempUser = new utilisateur;
+  //var tempUser = new utilisateur;
+
   /*// create a new user
   var newUser = new utilisateur({
     name: 'Robin',
@@ -42,49 +45,46 @@ var express = require('express'),
   });*/
 
   // get the user robin
-  utilisateur.find({ username: 'robin' }, function(err, user) {
+  /*utilisateur.find({ username: 'robin' }, function(err, user) {
     if (err) throw err;
     // object of the user
     console.log(user);
     });
+*/
 
-  //===============PASSPORT===============
+//===============PASSPORT===============
 
-  passport.use('local-signin', new LocalStrategy(
-    {passReqToCallback : true}, //allows us to pass back the request to the callback
-    function(req, username, password, done) {
-    var tempPass;
-      utilisateur.find({ username: username }, function(err, user) {
-        if (err) throw err;
-        console.log('from db' + user);
-        if (user[0] != undefined) {
-          tempPass = user[0].toObject().password;
-          tempUser = new utilisateur({
-            name: user[0].toObject().name,
-            username: user[0].toObject().username,
-            password: user[0].toObject().password,
-            firstName: user[0].toObject().firstName,
-            lastName: user[0].toObject().lastName,
-            artistName: user[0].toObject().artistName,
-            description: user[0].toObject().description,
-          });
-          if (password == tempPass) {
-            console.log('You are successfully logged in ' + username + '!');
-            req.session.success = 'You are successfully logged in ' + username + '!';
-            done(null, username);
-          }
-          else {
-            req.session.error = 'Could not log user in. Please try again.'; //inform user could not log them in
-            console.log('Could not log user in. Please try again.');
-            done(null, false, username);
-          }
+passport.use('local-signin', new LocalStrategy(
+  {passReqToCallback : true}, //allows us to pass back the request to the callback
+  function(req, username, password, done) {
+    utilisateur.find({ username: username }, function(err, user) {
+      if (err) throw err;
+      console.log('from db' + user);
+      if (user[0] != undefined) {
+        req.session.name = user[0].toObject().name;
+        req.session.username = user[0].toObject().username;
+        req.session.password = user[0].toObject().password;
+        req.session.firstName = user[0].toObject().firstName;
+        req.session.lastName = user[0].toObject().lastName;
+        req.session.artistName = user[0].toObject().artistName;
+        req.session.description = user[0].toObject().description;
+
+        if (password == req.session.password) {
+          console.log('You are successfully logged in ' + username + '!');
+          req.session.success = 'You are successfully logged in ' + username + '!';
+          done(null, username);
         }
         else {
+          req.session.error = 'Could not log user in. Please try again.'; //inform user could not log them in
+          console.log('Could not log user in. Please try again.');
           done(null, false, username);
         }
-      });
-  }));
-
+      }
+      else {
+        done(null, false, username);
+      }
+    });
+}));
 
   // Configure
   app.use(logger('combined'));
@@ -97,8 +97,6 @@ var express = require('express'),
   app.use(session({secret: 'supernova', saveUninitialized: true, resave: true}));
   app.use(passport.initialize());
   app.use(passport.session());
-
-  // Initialize Passport!!! (This only wasted 2h of my time)
 
   // Session-persisted message middleware
   app.use(function(req, res, next){
@@ -116,6 +114,8 @@ var express = require('express'),
 
     next();
   });
+
+
 
   app.get('/homeUnlogged.html', function (req, res,  next) {
   	res.sendFile('html/home.html', {root: __dirname })
@@ -169,6 +169,7 @@ var express = require('express'),
         console.log(tempName);
           next();
       } else {
+          console.log('Must be logged in to acces this part of the site !');
           res.redirect('/homeUnlogged.html');
       }
   });
@@ -183,9 +184,26 @@ var express = require('express'),
   });
 
   app.get('/profile.html', function (req, res,  next) {
-    //res.render('profile', tempUser);
-    res.send(tempUser); //replace with your data here
-  	res.sendFile('html/profile.html', {root: __dirname })
+    app.engine('.hbs', exphbs({defaultLayout: 'profile', extname: '.hbs'})); //handlebar
+    app.set('view engine', '.hbs');
+    res.render('profile', {
+      name: req.session.name,
+      username: req.session.username,
+      firstName: req.session.firstName,
+      lastName: req.session.lastName,
+      artistName: req.session.artistName,
+      description: req.session.description,
+    });
+  });
+
+  app.get('/myVideos.html', function (req, res,  next) {
+    video.find({ artistName: req.session.artistName }, function(err, videoList) {
+    //video.find({ artistName: tempUser.artistName }, function(err, videoList) {
+      if (err) throw err;
+      // object of the user
+      console.log(videoList);
+    });
+  	res.sendFile('html/myVideos.html', {root: __dirname })
   });
 
   app.get('/editVideo.html', function (req, res,  next) {
@@ -200,15 +218,7 @@ var express = require('express'),
   	res.sendFile('html/modifyProfile.html', {root: __dirname })
   });
 
-  app.get('/myVideos.html', function (req, res,  next) {
-    video.find({ artistName: tempUser.artistName }, function(err, videoList) {
-      if (err) throw err;
-      // object of the user
-      console.log(videoList);
-      res.send(videoList);
-      });
-  	res.sendFile('html/myVideos.html', {root: __dirname })
-  });
+
 
   app.get('/search.html', function (req, res,  next) {
   	res.sendFile('html/search.html', {root: __dirname })
@@ -219,7 +229,8 @@ var express = require('express'),
   });
 
   app.post('/uploadVideos.html', function(req, res, next) {
-    console.log(tempUser.artistName);
+    console.log(req.session.artistName);
+    //console.log(tempUser.artistName);
     console.log(req.body.videoYoutubeLink);
     console.log(req.body.genre);
     var newVideo = video({
@@ -258,6 +269,11 @@ var express = require('express'),
 
   passport.deserializeUser(function(user, done) {
     done(null, user);
+  });
+
+  db.on('close', console.error.bind(console, 'connection error:'));
+  db.once('close', function() {
+    console.log('CONNECTED');
   });
 
 app.listen(3000, function () {

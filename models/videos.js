@@ -12,6 +12,12 @@ var VideoSchema = new Schema({
   },
   artistName: {
     type: String
+  },
+  votePos: {
+    type: Number
+  },
+  voteNeg: {
+    type: Number
   }
 });
 
