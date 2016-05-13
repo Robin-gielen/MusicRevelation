@@ -29,28 +29,6 @@ var handleBar = require('express-handlebars'); //handleBar
   db.once('open', function() {
     console.log('CONNECTED');
   });
-  var tempName;
-  //var tempUser = new utilisateur;
-
-  /*// create a new user
-  var newUser = new utilisateur({
-    name: 'Robin',
-    username: 'robin2',
-    password: 'gielen',
-  });
-
-  newUser.save(function(err) {
-    if (err) throw err;
-    console.log('User created!');
-  });*/
-
-  // get the user robin
-  /*utilisateur.find({ username: 'robin' }, function(err, user) {
-    if (err) throw err;
-    // object of the user
-    console.log(user);
-    });
-*/
 
 //===============PASSPORT===============
 
@@ -115,10 +93,35 @@ passport.use('local-signin', new LocalStrategy(
     next();
   });
 
-
-
   app.get('/homeUnlogged.html', function (req, res,  next) {
-  	res.sendFile('html/home.html', {root: __dirname })
+    app.engine('.hbs', exphbs({defaultLayout: 'home', extname: '.hbs'})); //handlebar
+    app.set('view engine', '.hbs');
+    video.find({ }, function(err, videoList) {
+      if (err) throw err;
+      // object of the user
+      if (temp != undefined) {
+        var temp = [4];
+        console.log(videoList);
+        if (videoList.length < 4) {
+          for(var i=0, j=videoList.length; i<j; i++) {
+            temp[i] = videoList[i].url;
+          }
+        }
+        else {
+          for(var i=0, j=4; i<j; i++) {
+            temp[i] = videoList[i].url;
+          }
+        }
+        res.render('home', {
+          url1: temp[0],
+          url2: temp[1],
+          url3: temp[2],
+          url4: temp[3],
+        });
+      }
+      else
+      res.sendFile('html/home.html', {root: __dirname })
+    });
   });
 
   app.get('/subscribe.html', function (req, res,  next) {
@@ -126,12 +129,6 @@ passport.use('local-signin', new LocalStrategy(
   });
 
   app.post('/subscribe.html', function (req, res, next) {
-    /*console.log(req.body.username);
-    console.log(req.body.password);
-    console.log(req.body.firstname);
-    console.log(req.body.lastname);
-    console.log(req.body.artistname);
-    console.log(req.body.description);*/
     var newUser = utilisateur({
       name: req.body.username,
       username: req.body.username,
@@ -166,7 +163,6 @@ passport.use('local-signin', new LocalStrategy(
   app.use(function loggedIn(req, res, next) {
       if (req.user) {
         tempName = req.user;
-        console.log(tempName);
           next();
       } else {
           console.log('Must be logged in to acces this part of the site !');
@@ -180,7 +176,54 @@ passport.use('local-signin', new LocalStrategy(
   });
 
   app.get('/home.html', function (req, res,  next) {
-    res.sendFile('html/homeLogged.html', {root: __dirname })
+    app.engine('.hbs', exphbs({defaultLayout: 'homeLogged', extname: '.hbs'})); //handlebar
+    app.set('view engine', '.hbs');
+    video.find({ }, function(err, videoList) {
+      if (err) throw err;
+      // object of the user
+      var temp = [4];
+      if (videoList.length < 4) {
+        for(var i=0, j=videoList.length; i<j; i++) {
+          temp[i] = videoList[i].url;
+        }
+      }
+      else {
+        for(var i=0, j=4; i<j; i++) {
+          temp[i] = videoList[i].url;
+        }
+      }
+      res.render('homeLogged', {
+        url1: temp[0],
+        url2: temp[1],
+        url3: temp[2],
+        url4: temp[3],
+      });
+    });
+  });
+
+  app.post('/home.html', function (req, res, next) {
+    app.engine('.hbs', exphbs({defaultLayout: 'visitProfile', extname: '.hbs'})); //handlebar
+    app.set('view engine', '.hbs');
+    var tempUser;
+    utilisateur.find( {username: req.body.search}, function(err, userSearched) {
+            if (err) throw err;
+            tempUser = new utilisateur({
+              name: userSearched.name,
+              username: userSearched.username,
+              firstName: userSearched.firstName,
+              lastName: userSearched.lastName,
+              artistName: userSearched.artistName,
+              description: userSearched.description,
+            });
+    })
+    res.render('visitProfile', {
+      name: tempUser.name,
+      username: tempUser.username,
+      firstName: tempUser.firstName,
+      lastName: tempUser.lastName,
+      artistName: tempUser.artistName,
+      description: tempUser.description,
+    });
   });
 
   app.get('/profile.html', function (req, res,  next) {
@@ -197,42 +240,49 @@ passport.use('local-signin', new LocalStrategy(
   });
 
   app.get('/myVideos.html', function (req, res,  next) {
+    app.engine('.hbs', exphbs({defaultLayout: 'myVideos', extname: '.hbs'})); //handlebar
+    app.set('view engine', '.hbs');
     video.find({ artistName: req.session.artistName }, function(err, videoList) {
-    //video.find({ artistName: tempUser.artistName }, function(err, videoList) {
       if (err) throw err;
       // object of the user
-      console.log(videoList);
+      var temp = [4];
+      if (videoList.length < 4) {
+        for(var i=0, j=videoList.length; i<j; i++) {
+          temp[i] = videoList[i].url;
+        }
+      }
+      else {
+        for(var i=0, j=4; i<j; i++) {
+          temp[i] = videoList[i].url;
+        }
+      }
+      res.render('profile', {
+        url1: temp[0],
+        url2: temp[1],
+        url3: temp[2],
+        url4: temp[3],
+      });
     });
-  	res.sendFile('html/myVideos.html', {root: __dirname })
   });
-
-  app.get('/editVideo.html', function (req, res,  next) {
-  	res.sendFile('html/editVideo.html', {root: __dirname })
-  });
-
-  app.get('/favouriteArtists.html', function (req, res,  next) {
-  	res.sendFile('html/favouriteArtists.html', {root: __dirname })
-  });
-
-  app.get('/modifyProfile.html', function (req, res,  next) {
-  	res.sendFile('html/modifyProfile.html', {root: __dirname })
-  });
-
-
 
   app.get('/search.html', function (req, res,  next) {
-  	res.sendFile('html/search.html', {root: __dirname })
+    res.sendFile('html/search.html', {root: __dirname })
+  });
+
+  app.post('/search.html', function (req, res,  next) {
+    app.engine('.hbs', exphbs({defaultLayout: 'myVideos', extname: '.hbs'})); //handlebar
+    app.set('view engine', '.hbs');
+    video.find( {genre: req.body.genre}, function(err, videosList) {
+            if (err) throw err;
+    })
+    res.sendFile('html/videoResearch.html', {root: __dirname })
   });
 
   app.get('/uploadVideos.html', function (req, res,  next) {
-  	res.sendFile('html/uploadVideos.html', {root: __dirname })
+    res.sendFile('html/uploadVideos.html', {root: __dirname })
   });
 
   app.post('/uploadVideos.html', function(req, res, next) {
-    console.log(req.session.artistName);
-    //console.log(tempUser.artistName);
-    console.log(req.body.videoYoutubeLink);
-    console.log(req.body.genre);
     var newVideo = video({
       url: req.body.videoYoutubeLink,
       genre: req.body.genre,
@@ -247,6 +297,42 @@ passport.use('local-signin', new LocalStrategy(
     res.redirect('myVideos.html');
   });
 
+  app.get('/modifyProfile.html', function (req, res,  next) {
+    app.engine('.hbs', exphbs({defaultLayout: 'modifyProfile', extname: '.hbs'})); //handlebar
+    app.set('view engine', '.hbs');
+    res.render('modifyProfile', {
+      password: req.session.password,
+      username: req.session.username,
+      firstName: req.session.firstName,
+      lastName: req.session.lastName,
+      artistName: req.session.artistName,
+      description: req.session.description,
+    });
+  });
+
+  //========================TODO===========================
+  app.post('/modifyProfile.html', function (req, res, next) {
+    app.engine('.hbs', exphbs({defaultLayout: 'profile', extname: '.hbs'})); //handlebar
+    app.set('view engine', '.hbs');
+
+      res.render('profile', {
+        name: req.session.name,
+        username: req.session.username,
+        firstName: req.session.firstName,
+        lastName: req.session.lastName,
+        artistName: req.session.artistName,
+        description: req.session.description,
+      });
+  });
+
+  app.get('/editVideo.html', function (req, res,  next) {
+  	res.sendFile('html/editVideo.html', {root: __dirname })
+  });
+
+  app.get('/favouriteArtists.html', function (req, res,  next) {
+  	res.sendFile('html/favouriteArtists.html', {root: __dirname })
+  });
+
   app.get('/video.html', function (req, res,  next) {
   	res.sendFile('html/video.html', {root: __dirname })
   });
@@ -255,13 +341,10 @@ passport.use('local-signin', new LocalStrategy(
   	res.sendFile('html/videoResearch.html', {root: __dirname })
   });
 
-  app.get('/visitProfile.html', function (req, res,  next) {
-  	res.sendFile('html/visitProfile.html', {root: __dirname })
-  });
-
   app.get('/visitProfileVideos.html', function (req, res,  next) {
   	res.sendFile('html/visitProfileVideos.html', {root: __dirname })
   });
+  //=======================FIN TODO========================
 
   passport.serializeUser(function(user, done) {
     done(null, user);
@@ -273,7 +356,7 @@ passport.use('local-signin', new LocalStrategy(
 
   db.on('close', console.error.bind(console, 'connection error:'));
   db.once('close', function() {
-    console.log('CONNECTED');
+    console.log('DECONNECTED');
   });
 
 app.listen(3000, function () {
