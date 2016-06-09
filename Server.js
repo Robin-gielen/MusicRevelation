@@ -149,7 +149,6 @@ passport.use('local-signin', new LocalStrategy(
   });
 
   app.get('/login.html', function (req, res,  next) {
-    console.log('inlogin');
   	res.sendFile('html/login.html', {root: __dirname })
   });
 
@@ -227,6 +226,16 @@ passport.use('local-signin', new LocalStrategy(
   });
 
   app.get('/profile.html', function (req, res,  next) {
+    utilisateur.find({ username: req.session.username }, function(err, user) {
+      if (err) throw err;
+      console.log('from db' + user);
+      if (user[0] != undefined) {
+        req.session.username = user[0].toObject().username;
+        req.session.password = user[0].toObject().password;
+        req.session.firstName = user[0].toObject().firstName;
+        req.session.lastName = user[0].toObject().lastName;
+        req.session.artistName = user[0].toObject().artistName;
+        req.session.description = user[0].toObject().description;
     app.engine('.hbs', exphbs({defaultLayout: 'profile', extname: '.hbs'})); //handlebar
     app.set('view engine', '.hbs');
     res.render('profile', {
@@ -237,6 +246,8 @@ passport.use('local-signin', new LocalStrategy(
       artistName: req.session.artistName,
       description: req.session.description,
     });
+    }
+  });
   });
 
   app.get('/myVideos.html', function (req, res,  next) {
@@ -314,16 +325,38 @@ passport.use('local-signin', new LocalStrategy(
   app.post('/modifyProfile.html', function (req, res, next) {
     app.engine('.hbs', exphbs({defaultLayout: 'profile', extname: '.hbs'})); //handlebar
     app.set('view engine', '.hbs');
+      var utiName;
+      var password;
+      var prenom;
+      var nomFamille;
+      var nomArtist;
+      var descr;
+      utiName = req.session.username;
+      password = req.body.password;
+      prenom = req.body.firstname;
+      nomFamille = req.body.lastname;
+      nomArtist = req.body.artistname;
+      descr = req.body.description;
 
-      res.render('profile', {
-        name: req.session.name,
-        username: req.session.username,
-        firstName: req.session.firstName,
-        lastName: req.session.lastName,
-        artistName: req.session.artistName,
-        description: req.session.description,
-      });
+      utilisateur.update(
+       { "name":  utiName},
+       {
+         $set: { "firstName": prenom },
+         $set: { "lastName": nomFamille },
+         $set: { "artistName": nomArtist },
+         $set: { "description": descr }
+       }
+     );
+     res.render('profile', {
+       name: req.session.name,
+       username: req.session.username,
+       firstName: prenom,
+       lastName: nomFamille,
+       artistName: nomArtist,
+       description: descr,
+     });
   });
+
 
   app.get('/editVideo.html', function (req, res,  next) {
   	res.sendFile('html/editVideo.html', {root: __dirname })
